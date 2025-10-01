@@ -9,7 +9,12 @@
 #define BUFSIZE 256
 
 #define LOG_MODULE "Unicast"
+#ifndef LOG_CONF_LEVEL_UNICAST
 #define LOG_LEVEL LOG_LEVEL_INFO
+#else
+#define LOG_LEVEL LOG_CONF_LEVEL_UNICAST
+#endif
+
 
 // create the message struct
 struct message {

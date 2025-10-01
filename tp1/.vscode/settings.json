@@ -8,6 +8,7 @@
         "regex": "c",
         "temperature-sensor.h": "c",
         "sensors.h": "c",
-        "button-hal.h": "c"
+        "button-hal.h": "c",
+        "log-conf.h": "c"
     }
 }
