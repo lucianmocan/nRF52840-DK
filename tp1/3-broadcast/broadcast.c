@@ -4,8 +4,12 @@
 #include "net/nullnet/nullnet.h"
 #include <stdio.h>
 #include <string.h>
+#include <sys/log.h>
 
 #define BUFSIZE 256
+
+#define LOG_MODULE "Broadcast"
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 // create the message structure
 struct message {
@@ -26,12 +30,9 @@ void input_callback(const void *data, uint16_t len, const linkaddr_t *src,
 
     // display the source and the content of the received message
     struct message *msg = (struct message *)data;
-    printf("Message received: ");
-    for(int i = 0; i < LINKADDR_SIZE; i++) {
-        printf("%02x", src->u8[i]);
-        if(i < LINKADDR_SIZE - 1) printf(":");
-    }
-    printf(" - Text: %s, Sequence: %d\n", msg->text, msg->seq_num);
+    LOG_INFO("Message received: ");
+    LOG_INFO_LLADDR(src);
+    LOG_INFO_(" - Text: %s, Sequence: %d\n", msg->text, msg->seq_num);
 }
 PROCESS_THREAD(broadcast_button_process, ev, data)
 {
@@ -40,7 +41,7 @@ PROCESS_THREAD(broadcast_button_process, ev, data)
     // initialize the reception callback
     nullnet_set_input_callback(input_callback);
 
-    printf("Broadcast process started, waiting for button.\n");
+    LOG_INFO("Broadcast process started, waiting for button.\n");
 
     // create the message to send
     static struct message msg = {0};
@@ -63,7 +64,7 @@ PROCESS_THREAD(broadcast_button_process, ev, data)
 
             // send the message
             NETSTACK_NETWORK.output(NULL);
-            printf("Message sent: %s (%d)\n", msg.text, msg.seq_num);
+            LOG_INFO_("Message sent: %s (%d)\n", msg.text, msg.seq_num);
 
             msg.seq_num++;
         }
