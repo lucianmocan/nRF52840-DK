@@ -1,0 +1,3 @@
+[submodule "tp1/6-sensniff/sensniff"]
+	path = tp1/6-sensniff/sensniff
+	url = https://github.com/g-oikonomou/sensniff.git
