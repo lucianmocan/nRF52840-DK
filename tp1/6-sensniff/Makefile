@@ -1,5 +1,5 @@
 CONTIKI_PROJECT = sensniff
-CONTIKI = ../../contiki-ng
+CONTIKI = ~/Develop/contiki-ng
 
 PLATFORMS_ONLY = cc2538dk openmote z1 zoul cc26x0-cc13x0 simplelink nrf52840
 
