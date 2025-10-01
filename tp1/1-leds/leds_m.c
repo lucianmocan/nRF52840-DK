@@ -14,13 +14,16 @@ PROCESS_THREAD(leds_m_process, ev, data)
 
     PROCESS_BEGIN();
 
+    gpio_hal_arch_init();
+    gpio_hal_arch_pin_set_output(0, 13); // LED1
+    gpio_hal_arch_pin_set_output(0, 14); // LED2
+    gpio_hal_arch_pin_set_output(0, 15); // LED3
+    gpio_hal_arch_pin_set_output(0, 16); // LED4
+
     while (1) {
 
         PROCESS_YIELD();
 
-
-        // printf("Button count: %d\n", button_hal_button_count);
-        // TODO1
         // l'événement est-il un bouton relaché ?
         if (ev == button_hal_release_event) {
             button_hal_button_t *button = (button_hal_button_t *)data;
