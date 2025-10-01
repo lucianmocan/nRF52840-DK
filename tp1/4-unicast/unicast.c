@@ -4,8 +4,12 @@
 #include "net/nullnet/nullnet.h"
 #include <stdio.h>
 #include <string.h>
+#include <sys/log.h>
 
 #define BUFSIZE 256
+
+#define LOG_MODULE "Unicast"
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 // create the message struct
 struct message {
@@ -26,12 +30,9 @@ void input_callback(const void *data, uint16_t len, const linkaddr_t *src,
 
     // display the source and the message
     struct message *msg = (struct message *)data;
-    printf("Message received: ");
-    for(int i = 0; i < LINKADDR_SIZE; i++) {
-        printf("%02x", src->u8[i]);
-        if(i < LINKADDR_SIZE - 1) printf(":");
-    }
-    printf(" - Text: %s, Sequence: %d\n", msg->text, msg->seq_num);
+    LOG_INFO("Message received: ");
+    LOG_INFO_LLADDR(src);
+    LOG_INFO_(" - Text: %s, Sequence: %d\n", msg->text, msg->seq_num);
 }
 
 PROCESS_THREAD(unicast_process, ev, data)
@@ -64,8 +65,9 @@ PROCESS_THREAD(unicast_process, ev, data)
 
         // send message to destination
         NETSTACK_NETWORK.output(&dest_addr);
-        printf("Message unicast envoyé vers %02x:%02x : %s (%d)\n", 
-            dest_addr.u8[0], dest_addr.u8[1], msg.text, msg.seq_num);
+        LOG_INFO_("Message sent to: ");
+        LOG_INFO_LLADDR(&dest_addr);
+        LOG_INFO_(" - Text: %s, Sequence: %d\n", msg.text, msg.seq_num);
 
         msg.seq_num++;
 
