@@ -7,6 +7,7 @@
         "optional": "c",
         "regex": "c",
         "temperature-sensor.h": "c",
-        "sensors.h": "c"
+        "sensors.h": "c",
+        "button-hal.h": "c"
     }
 }
