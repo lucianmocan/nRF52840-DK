@@ -1,6 +1,12 @@
 {
     "files.associations": {
         "variant": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "contiki.h": "c",
+        "__node_handle": "c",
+        "optional": "c",
+        "regex": "c",
+        "temperature-sensor.h": "c",
+        "sensors.h": "c"
     }
 }
