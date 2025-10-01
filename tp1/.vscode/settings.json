@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "variant": "c"
+        "variant": "c",
+        "stdio.h": "c"
     }
 }
