@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "simple-udp.h": "c",
+        "etimer.h": "c"
+    }
+}
