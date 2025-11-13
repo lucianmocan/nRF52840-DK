@@ -36,30 +36,34 @@ struct message {
 
 // fonction de réception des messages
 void udp_rx_callback(struct simple_udp_connection *udp_con,
-			 const uip_ipaddr_t *src,
-			 uint16_t sport,
-			 const uip_ipaddr_t *dest,
-			 uint16_t dport,
-			 const uint8_t *data,
-			 uint16_t size)
+					 const uip_ipaddr_t *src,
+					 uint16_t sport,
+					 const uip_ipaddr_t *dest,
+					 uint16_t dport,
+					 const uint8_t *data,
+					 uint16_t size)
 {
-	// print source IP address and all message fields
-	struct message *msg = (struct message *)data;
-	LOG_INFO("Message received from ");
+	struct message *mess = (struct message *)data;
+	LOG_INFO("Received %u bytes from ", size);
 	LOG_INFO_6ADDR(src);
-	LOG_INFO_(": Sequence: %d, Temperature: %d, Text: %s\n",
-			 msg->seq_num, msg->temperature, msg->text);
+	LOG_INFO_(", port %u -> ", sport);
+	LOG_INFO_6ADDR(dest);
+	LOG_INFO_(", port %u: '", dport);
+
+	LOG_INFO_("%d, %d, %s", mess->seq_num, mess->temperature, mess->text);
+
+	LOG_INFO_("'\n");
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_receiver, ev, data)
 {
 	PROCESS_BEGIN();
-
 	static struct simple_udp_connection udp_conn;
-	simple_udp_register(&udp_conn, PORT_SENDER,
-						NULL, PORT_RECV,
-						udp_rx_callback);
-
+	simple_udp_register(&udp_conn, PORT_RECV, NULL, PORT_SENDER, udp_rx_callback);
+	while (1)
+	{
+		PROCESS_YIELD();
+	}
 	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
