@@ -257,7 +257,7 @@ struct sicslowpan_frag_info
   uint16_t reassembled_len;
   /** Reassembly %process %timer. */
   struct timer reass_timer;
-#ifdef SICSLOWPAN_CONF_6LFF
+#if SICSLOWPAN_6LFF
   // If true mean that we are using 6LFF
   bool forwarding_flag;
   // Contain the needed next hop
@@ -286,7 +286,7 @@ struct sicslowpan_frag_buf
 static struct sicslowpan_frag_buf frag_buf[SICSLOWPAN_FRAGMENT_BUFFERS];
 
 /*---------------------------------------------------------------------------*/
-#ifdef SICSLOWPAN_CONF_6LFF
+#if SICSLOWPAN_6LFF
 // STEP 5
 static int8_t
 find_context(uint16_t tag, const linkaddr_t *sender)
@@ -429,7 +429,7 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     /* Found a free fragment info to store data in */
     frag_info[found].len = frag_size;
     frag_info[found].tag = tag;
-#ifdef SICSLOWPAN_CONF_6LFF
+#if SICSLOWPAN_6LFF
     // Initialize the extra state per fragmented datagram for 6LFF
     frag_info[found].forwarding_flag = false;
     linkaddr_copy(&frag_info[found].next_hop, &linkaddr_null);
@@ -482,7 +482,7 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
 }
 
 /*---------------------------------------------------------------------------*/
-#ifdef SICSLOWPAN_CONF_6LFF
+#if SICSLOWPAN_6LFF
 // STEP 6
 static void
 forward_frag_as_is(const linkaddr_t *next_hop)
@@ -2199,7 +2199,7 @@ input(void)
     frag_tag = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG);
     frag_size = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0x07ff;
     packetbuf_hdr_len += SICSLOWPAN_FRAGN_HDR_LEN;
-#ifdef SICSLOWPAN_CONF_6LFF
+#if SICSLOWPAN_6LFF
     // Step 10
     frag_context = find_context(frag_tag, packetbuf_addr(PACKETBUF_ADDR_SENDER));
     if (frag_context >= 0 && frag_info[frag_context].forwarding_flag) {
@@ -2263,7 +2263,7 @@ input(void)
       return;
     }
   }
-#ifdef SICSLOWPAN_CONF_6LFF
+#if SICSLOWPAN_6LFF
   // Step 7
   if (first_fragment)
   {
