@@ -257,12 +257,12 @@ struct sicslowpan_frag_info
   uint16_t reassembled_len;
   /** Reassembly %process %timer. */
   struct timer reass_timer;
-
+#if SICSLOWPAN_6LFF
   // If true mean that we are using 6LFF
   bool forwarding_flag;
   // Contain the needed next hop
   linkaddr_t next_hop;
-
+#endif
   /** Fragment size of first fragment */
   uint16_t first_frag_len;
   /** First fragment - needs a larger buffer since the size is uncompressed size
