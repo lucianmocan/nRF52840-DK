@@ -258,11 +258,12 @@ struct sicslowpan_frag_info
   /** Reassembly %process %timer. */
   struct timer reass_timer;
 #if SICSLOWPAN_6LFF
+#ifdef SICSLOWPAN_CONF_6LFF
   // If true mean that we are using 6LFF
   bool forwarding_flag;
   // Contain the needed next hop
   linkaddr_t next_hop;
-#endif
+
   /** Fragment size of first fragment */
   uint16_t first_frag_len;
   /** First fragment - needs a larger buffer since the size is uncompressed size
@@ -390,6 +391,11 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     /* Found a free fragment info to store data in */
     frag_info[found].len = frag_size;
     frag_info[found].tag = tag;
+#ifdef SICSLOWPAN_CONF_6LFF
+    // Initialize the extra state per fragmented datagram for 6LFF
+    frag_info[found].forwarding_flag = false;
+    linkaddr_copy(&frag_info[found].next_hop, &linkaddr_null);
+#endif
     linkaddr_copy(&frag_info[found].sender,
                   packetbuf_addr(PACKETBUF_ADDR_SENDER));
     timer_set(&frag_info[found].reass_timer, SICSLOWPAN_REASS_MAXAGE * CLOCK_SECOND / 16);
@@ -2010,8 +2016,8 @@ output(const linkaddr_t *localdest)
       processed_ip_out_len += packetbuf_payload_len;
     }
 #else  /* SICSLOWPAN_CONF_FRAG */
-    LOG_ERR("output: Packet too large to be sent without fragmentation support; dropping packet\n");
-    return 0;
+      LOG_ERR("output: Packet too large to be sent without fragmentation support; dropping packet\n");
+      return 0;
 #endif /* SICSLOWPAN_CONF_FRAG */
   }
   else
@@ -2307,7 +2313,7 @@ copypayload:
       uip_len = packetbuf_payload_len + uncomp_hdr_len;
     }
 #else
-  uip_len = packetbuf_payload_len + uncomp_hdr_len;
+    uip_len = packetbuf_payload_len + uncomp_hdr_len;
 #endif /* SICSLOWPAN_CONF_FRAG */
     LOG_INFO("input: received IPv6 packet with len %d\n",
              uip_len);
