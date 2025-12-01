@@ -286,6 +286,8 @@ struct sicslowpan_frag_buf
 static struct sicslowpan_frag_buf frag_buf[SICSLOWPAN_FRAGMENT_BUFFERS];
 
 /*---------------------------------------------------------------------------*/
+#ifdef SICSLOWPAN_CONF_6LFF
+// STEP 5
 static int8_t
 find_context(uint16_t tag, const linkaddr_t *sender)
 {
@@ -299,6 +301,29 @@ find_context(uint16_t tag, const linkaddr_t *sender)
   }
   return -1;
 }
+
+// STEP 8
+static const linkaddr_t *
+find_nexthop_6LFF(const uip_ipaddr_t *ipaddr)
+{
+  const uip_ipaddr_t *nexthop_ipaddr;
+  const uip_lladdr_t *lladdr;
+
+  nexthop_ipaddr = NETSTACK_ROUTING.get_nexthop((uip_ipaddr_t *)ipaddr);
+  if (nexthop_ipaddr == NULL) {
+    LOG_WARN("6LFF: No route to destination, dropping packet\n");
+    return NULL;
+  }
+
+  lladdr = uip_ds6_nbr_lladdr_from_ipaddr(nexthop_ipaddr);
+  if (lladdr == NULL) {
+    LOG_WARN("6LFF: No neihbor entry for the next hop, dropping packet\n");
+    return NULL;
+  }
+
+  return (const linkaddr_t *)lladdr;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 static int
 clear_fragments(uint8_t frag_info_index)
@@ -457,6 +482,7 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
 }
 
 /*---------------------------------------------------------------------------*/
+#ifdef SICSLOWPAN_CONF_6LFF
 // STEP 6
 static void
 forward_frag_as_is(const linkaddr_t *next_hop)
@@ -473,7 +499,7 @@ forward_frag_as_is(const linkaddr_t *next_hop)
 
   NETSTACK_MAC.send(NULL, NULL);
 }
-
+#endif
 /*---------------------------------------------------------------------------*/
 /* Copy all the fragments that are associated with a specific context
    into uip */
@@ -2173,7 +2199,14 @@ input(void)
     frag_tag = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG);
     frag_size = GET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE) & 0x07ff;
     packetbuf_hdr_len += SICSLOWPAN_FRAGN_HDR_LEN;
-
+#ifdef SICSLOWPAN_CONF_6LFF
+    // Step 10
+    frag_context = find_context(frag_tag, packetbuf_addr(PACKETBUF_ADDR_SENDER));
+    if (frag_context >= 0 && frag_info[frag_context].forwarding_flag) {
+      forward_frag_as_is(&frag_info[frag_context].next_hop);
+      return;
+    }
+#endif
     /* Add the fragment to the fragmentation context (this will also
        copy the payload) */
     frag_context = add_fragment(frag_tag, frag_size, frag_offset);
@@ -2230,6 +2263,39 @@ input(void)
       return;
     }
   }
+#ifdef SICSLOWPAN_CONF_6LFF
+  // Step 7
+  if (first_fragment)
+  {
+    bool use_6lff = false;
+    uip_ipaddr_t *dest_addr = &SICSLOWPAN_IP_BUF(buffer)->destipaddr;
+
+    if (!uip_is_addr_mcast(dest_addr) &&
+        !uip_is_addr_linklocal(dest_addr) &&
+        !uip_ds6_is_my_addr(dest_addr))
+    {
+      use_6lff = true;
+    }
+
+    if (use_6lff)
+    {
+      // STEP 9
+      const linkaddr_t *next_hop = find_nexthop_6LFF(dest_addr);
+      if (next_hop != NULL) {
+        frag_info[frag_context].forwarding_flag = true;
+        linkaddr_copy(&frag_info[frag_context].next_hop, next_hop);
+
+        forward_frag_as_is(next_hop);
+        return;
+      } else {
+        // no next hop found, drop
+        clear_fragments(frag_context);
+        return;
+      }
+    }
+  }
+#endif
+
   else if (PACKETBUF_6LO_PTR[PACKETBUF_6LO_DISPATCH] == SICSLOWPAN_DISPATCH_IPV6)
   {
     LOG_DBG("uncompression: IPV6 dispatch\n");
