@@ -288,6 +288,20 @@ struct sicslowpan_frag_buf
 static struct sicslowpan_frag_buf frag_buf[SICSLOWPAN_FRAGMENT_BUFFERS];
 
 /*---------------------------------------------------------------------------*/
+static int8_t
+find_context(uint16_t tag, const linkaddr_t *sender)
+{
+  int i;
+  for (i = 0; i < SICSLOWPAN_REASS_CONTEXTS; i++) {
+    if (frag_info[i].len > 0 &&
+        frag_info[i].tag == tag &&
+        linkaddr_cmp(&frag_info[i].sender, sender)) {
+      return i;
+    }
+  }
+  return -1;
+}
+/*---------------------------------------------------------------------------*/
 static int
 clear_fragments(uint8_t frag_info_index)
 {
