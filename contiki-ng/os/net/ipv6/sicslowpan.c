@@ -257,14 +257,12 @@ struct sicslowpan_frag_info
   uint16_t reassembled_len;
   /** Reassembly %process %timer. */
   struct timer reass_timer;
-
-  #ifdef SICSLOWPAN_CONF_6LFF
+#ifdef SICSLOWPAN_CONF_6LFF
   // If true mean that we are using 6LFF
   bool forwarding_flag;
   // Contain the needed next hop
   linkaddr_t next_hop;
-  #endif
-
+#endif
   /** Fragment size of first fragment */
   uint16_t first_frag_len;
   /** First fragment - needs a larger buffer since the size is uncompressed size
@@ -406,11 +404,11 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     /* Found a free fragment info to store data in */
     frag_info[found].len = frag_size;
     frag_info[found].tag = tag;
-    #ifdef SICSLOWPAN_CONF_6LFF
+#ifdef SICSLOWPAN_CONF_6LFF
     // Initialize the extra state per fragmented datagram for 6LFF
     frag_info[found].forwarding_flag = false;
     linkaddr_copy(&frag_info[found].next_hop, &linkaddr_null);
-    #endif
+#endif
     linkaddr_copy(&frag_info[found].sender,
                   packetbuf_addr(PACKETBUF_ADDR_SENDER));
     timer_set(&frag_info[found].reass_timer, SICSLOWPAN_REASS_MAXAGE * CLOCK_SECOND / 16);
@@ -457,6 +455,25 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     return -1;
   }
 }
+
+/*---------------------------------------------------------------------------*/
+// STEP 6
+static void
+forward_frag_as_is(const linkaddr_t *next_hop)
+{
+  /* 1. Sanity check */
+  if (next_hop == NULL)
+  {
+    return;
+  }
+
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, next_hop);
+
+  packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_null);
+
+  NETSTACK_MAC.send(NULL, NULL);
+}
+
 /*---------------------------------------------------------------------------*/
 /* Copy all the fragments that are associated with a specific context
    into uip */
