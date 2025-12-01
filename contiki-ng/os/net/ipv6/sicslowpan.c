@@ -306,16 +306,16 @@ find_context(uint16_t tag, const linkaddr_t *sender)
 static const linkaddr_t *
 find_nexthop_6LFF(const uip_ipaddr_t *ipaddr)
 {
-  const uip_ipaddr_t *nexthop_ipaddr;
+  uip_ds6_route_t *route;
   const uip_lladdr_t *lladdr;
 
-  nexthop_ipaddr = NETSTACK_ROUTING.get_nexthop((uip_ipaddr_t *)ipaddr);
-  if (nexthop_ipaddr == NULL) {
+  route = uip_ds6_route_lookup(ipaddr);
+  if (route == NULL) {
     LOG_WARN("6LFF: No route to destination, dropping packet\n");
     return NULL;
   }
 
-  lladdr = uip_ds6_nbr_lladdr_from_ipaddr(nexthop_ipaddr);
+  lladdr = uip_ds6_nbr_lladdr_from_ipaddr(uip_ds6_route_nexthop(route));
   if (lladdr == NULL) {
     LOG_WARN("6LFF: No neihbor entry for the next hop, dropping packet\n");
     return NULL;
