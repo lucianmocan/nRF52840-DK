@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/log.h>
+#include "../arch/platform/nrf52840/common/temperature-sensor.h"
 
 #define BUFSIZE 256
 

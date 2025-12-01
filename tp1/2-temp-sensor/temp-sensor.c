@@ -1,6 +1,7 @@
 #include "../arch/platform/nrf52840/common/temperature-sensor.h"
 #include "contiki.h"
 #include <stdio.h>
+#include <etimer.h>
 
 /*---------------------------------------------------------------------------*/
 PROCESS(read_temp_process, "Read Temperature Process");
@@ -9,7 +10,6 @@ AUTOSTART_PROCESSES(&read_temp_process);
 PROCESS_THREAD(read_temp_process, ev, data)
 {
     static struct etimer timer_timer;
-
 
     PROCESS_BEGIN();
 
