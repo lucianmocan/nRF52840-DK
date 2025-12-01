@@ -258,10 +258,12 @@ struct sicslowpan_frag_info
   /** Reassembly %process %timer. */
   struct timer reass_timer;
 
+  #ifdef SICSLOWPAN_CONF_6LFF
   // If true mean that we are using 6LFF
   bool forwarding_flag;
   // Contain the needed next hop
   linkaddr_t next_hop;
+  #endif
 
   /** Fragment size of first fragment */
   uint16_t first_frag_len;
@@ -390,6 +392,11 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     /* Found a free fragment info to store data in */
     frag_info[found].len = frag_size;
     frag_info[found].tag = tag;
+    #ifdef SICSLOWPAN_CONF_6LFF
+    // Initialize the extra state per fragmented datagram for 6LFF
+    frag_info[found].forwarding_flag = false;
+    linkaddr_copy(&frag_info[found].next_hop, &linkaddr_null);
+    #endif
     linkaddr_copy(&frag_info[found].sender,
                   packetbuf_addr(PACKETBUF_ADDR_SENDER));
     timer_set(&frag_info[found].reass_timer, SICSLOWPAN_REASS_MAXAGE * CLOCK_SECOND / 16);
