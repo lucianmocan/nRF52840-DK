@@ -441,6 +441,25 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
     return -1;
   }
 }
+
+/*---------------------------------------------------------------------------*/
+// STEP 6
+static void
+forward_frag_as_is(const linkaddr_t *next_hop)
+{
+  /* 1. Sanity check */
+  if (next_hop == NULL)
+  {
+    return;
+  }
+
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, next_hop);
+
+  packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_null);
+
+  NETSTACK_MAC.send(NULL, NULL);
+}
+
 /*---------------------------------------------------------------------------*/
 /* Copy all the fragments that are associated with a specific context
    into uip */
